@@ -1,0 +1,6 @@
+CompileFlags:
+  Add:
+    - -xc
+    - -I./inc/
+    - -I../inc/
+    - -std=c2x
