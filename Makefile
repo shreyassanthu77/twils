@@ -14,11 +14,12 @@ endif
 CC = zig cc -target ${TARGET} 
 SRC = main.c \
 			./inc/str/string.c \
-			./tailwind/tailwind.c
+			./tailwind/tailwind.c \
+			./inc/jsr/jsr.c
 INCLUDE = -I./inc -I.
 CFLAGS = -static -std=c2x -Wall -Wextra -Werror -Wno-unused-parameter -Wno-format
 ifeq (${MODE}, release)
-QJS_CMD += -O2 -s
+CFLAGS += -O3 -s
 endif
 OBJDIR = bin/obj
 OUTDIR = bin/${MODE}
@@ -47,9 +48,11 @@ WINPTHREAD_SRC = inc/winpthread/src/barrier.c \
 							inc/winpthread/src/sem.c \
 							inc/winpthread/src/spinlock.c \
 							inc/winpthread/src/thread.c
-build-winpthread:
+
+build-winpthread: ${WINPTHREAD_SRC}
+	@mkdir -p ${OBJDIR}
 ifeq (${OS}, windows)
-	@mkdir -p ${OBJDIR}/winpthread
+	mkdir -p ${OBJDIR}/winpthread
 	@${WINPTH_CMD} ./inc/winpthread/src/barrier.c -c -o ${OBJDIR}/winpthread/barrier.obj
 	@${WINPTH_CMD} ./inc/winpthread/src/clock.c -c -o ${OBJDIR}/winpthread/clock.obj
 	@${WINPTH_CMD} ./inc/winpthread/src/cond.c -c -o ${OBJDIR}/winpthread/cond.obj
@@ -78,18 +81,22 @@ OBJ = ${OBJDIR}/winpthread/barrier \
 			${OBJDIR}/winpthread/sem \
 			${OBJDIR}/winpthread/spinlock \
 			${OBJDIR}/winpthread/thread.obj
-
 endif
 
-QJS_CMD = ${CC} -c -s -O2 \
+QJS_CMD = ${CC} -c -s -O3 \
 					-Wall -Wextra -Werror \
 					-Wno-unused-parameter -Wno-sign-compare \
 					-Wno-incompatible-pointer-types -Wno-unused-variable \
 					-Wno-unused-but-set-variable \
+					-I./inc \
 					-DCONFIG_BIGNUM \
-					-DCONFIG_VERSION=\"$(shell cat inc/quickjs/VERSION)\"
+					-DCONFIG_VERSION=\"$(shell cat inc/quickjs/VERSION)\" \
+
 ifeq (${OS}, windows)
 	QJS_CMD += -I./inc/winpthread/include
+endif
+ifeq (${MODE}, release)
+	QJS_CMD += -DNO_ASSERT
 endif
 
 QJS_FILES = inc/quickjs/libregexp.c \
@@ -98,7 +105,7 @@ QJS_FILES = inc/quickjs/libregexp.c \
 						inc/quickjs/cutils.c \
 						inc/quickjs/quickjs.c
 
-build-quickjs: ${QJS_FILES}
+build-quickjs: ${QJS_FILES} build-winpthread
 	@mkdir -p ${OBJDIR}
 ifeq (${OS}, windows)
 	@${QJS_CMD} inc/quickjs/libregexp.c  -c -o ${OBJDIR}/libregexp.obj
@@ -116,10 +123,10 @@ else
 OBJ += ${OBJDIR}/quickjs-build.o
 endif
 
-build: ${SRC} build-quickjs build-winpthread
+build: ${SRC} build-quickjs 
 	@echo "Building ${BIN}"
 	@mkdir -p ${OUTDIR}
-	@${CC} ${CFLAGS} ${SRC} ${INCLUDE} ${OBJ} -o ${BIN}
+	@${CC} ${CFLAGS} ${INCLUDE} ${SRC} ${OBJ} -o ${BIN}
 
 run: build
 	@/usr/bin/time -f 'took %es, rss %Mkb max and %tkb avg, I/O %I' ${BIN}

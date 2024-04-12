@@ -3,4 +3,5 @@ CompileFlags:
     - -xc
     - -I./inc/
     - -I../inc/
+    - -I../../inc/
     - -std=c2x

@@ -20,6 +20,8 @@ typedef struct {
     .data = s, .length = sizeof(s) - 1, .capacity = sizeof(s), .owned = false  \
   }
 
+#define str_n(s, n)                                                            \
+  (string) { .data = s, .length = n, .capacity = n, .owned = false }
 /**
  * Create a new string with a given capacity.
  *

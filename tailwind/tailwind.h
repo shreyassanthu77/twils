@@ -6,9 +6,17 @@
 
 typedef struct tailwind_t tailwind_t;
 
-tailwind_t *tailwind_init(string base_path);
+typedef struct {
+  int64_t a;
+  int64_t b;
+} tailwind_class_order_t;
 
-uint64_t tailwind_get_class_order(tailwind_t *tailwind, string class_name);
+tailwind_t *tailwind_init(string source_path);
+
+bool tailwind_load_css(tailwind_t *tailwind, string css_path);
+
+tailwind_class_order_t tailwind_get_class_order(tailwind_t *tailwind,
+                                                string class_a, string class_b);
 
 void tailwind_free(tailwind_t *tailwind);
 
