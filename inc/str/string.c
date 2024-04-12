@@ -1,4 +1,5 @@
 #include "string.h"
+#include <ctype.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -151,3 +152,28 @@ void string_writef(string *str, size_t from, const char *fmt, ...) {
   va_end(args);
 }
 #undef max
+
+string *string_split_whitespace(string str, size_t *length) {
+  string *strings = calloc(4, sizeof(string));
+  size_t capacity = 4;
+  *length = 0;
+  for (size_t i = 0; i < str.length; i++) {
+    if (isspace(str.data[i])) {
+      continue;
+    }
+
+    size_t start = i;
+    while (i < str.length && !isspace(str.data[i])) {
+      i++;
+    }
+
+    if (*length == capacity) {
+      capacity *= 2;
+      strings = realloc(strings, capacity * sizeof(string));
+    }
+
+    strings[*length] = str_n(str.data + start, i - start);
+    (*length)++;
+  }
+  return strings;
+}

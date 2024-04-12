@@ -1,6 +1,7 @@
 #include "str/string.h"
 #include "tailwind/tailwind.h"
 #include <stddef.h>
+#include <time.h>
 #define FS_IMPLEMENTATION
 #include "fs.h"
 #include <stdio.h>
@@ -12,12 +13,21 @@ int main() {
   const string css_path = str("./min.css");
   tailwind_t *tw = tailwind_init(js_path);
   tailwind_load_css(tw, css_path);
-  tailwind_class_order_t result;
-  for (size_t i = 0; i < 10000; i++) {
-    result = tailwind_get_class_order(tw, str("p-4"), str("lkasjdf"));
-  }
-  printf("Result: %ld %ld\n", result.a, result.b);
 
+  string result = string_with_capacity(2000);
+  time_t start = time(NULL);
+  for (int i = 0; i < 100'000; i++) {
+    tailwind_get_class_order(
+        tw, &result,
+        str("bg-blue-500 text-white py-2 px-4 what hover:focus:bg-blue-700"));
+  }
+  time_t end = time(NULL);
+  double elapsed = difftime(end, start);
+  printf("Class order: %.*s\n", str_fe(result));
+
+  printf("Elapsed time: %.2fs\n", elapsed);
+
+  string_free(&result);
   tailwind_free(tw);
   return 0;
 }

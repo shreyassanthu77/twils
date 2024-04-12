@@ -15,8 +15,8 @@ tailwind_t *tailwind_init(string source_path);
 
 bool tailwind_load_css(tailwind_t *tailwind, string css_path);
 
-tailwind_class_order_t tailwind_get_class_order(tailwind_t *tailwind,
-                                                string class_a, string class_b);
+void tailwind_get_class_order(tailwind_t *tailwind, string *result,
+                              string class);
 
 void tailwind_free(tailwind_t *tailwind);
 

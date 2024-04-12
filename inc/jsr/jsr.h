@@ -14,6 +14,8 @@ bool jsr_eval_module_str(jsr_t *jsr, string module_name, string source);
 
 JSValue jsr_to_js_string(jsr_t *jsr, string str);
 
+void jsr_to_string(jsr_t *jsr, string *result, JSValue value);
+
 int64_t jsr_to_int64(jsr_t *jsr, JSValue value);
 
 JSValue jsr_get_global(jsr_t *jsr, string name);

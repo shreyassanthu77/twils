@@ -23,9 +23,9 @@ tailwind_t *tailwind_init(string source_path) {
       //
       "import * as tw from 'tailwind.js';"
       "globalThis.load_design_system = tw.__unstable__loadDesignSystem;"
-      "globalThis.getClassOrder = function(ds, a, b) {"
-      "	const res = ds.getClassOrder([a, b]);"
-      "	return { a: res[0][1], b: res[1][1] };"
+      "globalThis.getClassOrder = function(ds, cls) {"
+      "	const res = ds.getClassOrder(cls.split(' '));"
+      "	return res.map(x => x[1] ?? -1).join(' ');"
       "};"
       //
   );
@@ -38,7 +38,6 @@ tailwind_t *tailwind_init(string source_path) {
 bool tailwind_load_css(tailwind_t *tailwind, string css_path) {
   string css_str = read_file(css_path);
   JSValue css_value = jsr_to_js_string(tailwind->jsr, css_str);
-  string_free(&css_str);
 
   JSValue load_design_system_fn =
       jsr_get_global(tailwind->jsr, str("load_design_system"));
@@ -55,29 +54,17 @@ bool tailwind_load_css(tailwind_t *tailwind, string css_path) {
   return success;
 }
 
-// static int __run_count = 0;
-tailwind_class_order_t
-tailwind_get_class_order(tailwind_t *tailwind, string class_a, string class_b) {
+void tailwind_get_class_order(tailwind_t *tailwind, string *result,
+                              string class) {
   if (!tailwind->loaded) {
-    return (tailwind_class_order_t){-1, -1};
+    return;
   }
-  // if (__run_count++ % 10000 == 0) {
-  //   jsr_run_gc(tailwind->jsr);
-  //   __run_count = 0;
-  // }
-  JSValue cls_a = jsr_to_js_string(tailwind->jsr, class_a);
-  JSValue cls_b = jsr_to_js_string(tailwind->jsr, class_b);
-  JSValue args[3] = {tailwind->design_system, cls_a, cls_b};
-  JSValue result = jsr_call(tailwind->jsr, tailwind->get_class_order, 3, args);
 
-  JSValue a = jsr_get(tailwind->jsr, result, str("a"));
-  int64_t a_num = jsr_to_int64(tailwind->jsr, a);
+  JSValue cls_a = jsr_to_js_string(tailwind->jsr, class);
+  JSValue args[2] = {tailwind->design_system, cls_a};
+  JSValue order = jsr_call(tailwind->jsr, tailwind->get_class_order, 2, args);
 
-  JSValue b = jsr_get(tailwind->jsr, result, str("b"));
-  int64_t b_num = jsr_to_int64(tailwind->jsr, b);
-
-  jsr_free_value(tailwind->jsr, result);
-  return (tailwind_class_order_t){a_num, b_num};
+  jsr_to_string(tailwind->jsr, result, order);
 }
 
 void tailwind_free(tailwind_t *tailwind) {

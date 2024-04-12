@@ -36,9 +36,33 @@ bool jsr_eval_module_str(jsr_t *jsr, string module_name, string source) {
   return res;
 }
 
+typedef struct {
+  JSRefCountHeader header; /* must come first, 32-bit */
+  uint32_t len : 31;
+  uint8_t is_wide_char : 1; /* 0 = 8 bits, 1 = 16 bits characters */
+  /* for JS_ATOM_TYPE_SYMBOL: hash = 0, atom_type = 3,
+     for JS_ATOM_TYPE_PRIVATE: hash = 1, atom_type = 3
+     XXX: could change encoding to have one more bit in hash */
+  uint32_t hash : 30;
+  uint8_t atom_type : 2; /* != 0 if atom, JS_ATOM_TYPE_x */
+  uint32_t hash_next;    /* atom_index for JS_ATOM_TYPE_SYMBOL */
+  union {
+    uint8_t *str8; /* 8 bit strings will get an extra null terminator */
+    uint16_t str16[0];
+  } u;
+} JSString;
+
 JSValue jsr_to_js_string(jsr_t *jsr, string str) {
   JSValue js_str = JS_NewStringLen(jsr->ctx, str_av(str));
   return js_str;
+}
+
+void jsr_to_string(jsr_t *jsr, string *result, JSValue value) {
+  size_t len;
+  const char *str = JS_ToCStringLen(jsr->ctx, &len, value);
+  string_write(result, 0, str, len);
+  JS_FreeCString(jsr->ctx, str);
+  JS_FreeValue(jsr->ctx, value);
 }
 
 int64_t jsr_to_int64(jsr_t *jsr, JSValue value) {
