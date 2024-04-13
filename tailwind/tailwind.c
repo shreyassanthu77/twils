@@ -1,7 +1,7 @@
 #include "tailwind.h"
+#include "timing.h"
 #include <fs.h>
 #include <jsr/jsr.h>
-#include <quickjs/quickjs.h>
 #include <stdlib.h>
 #include <str/string.h>
 
@@ -24,8 +24,8 @@ tailwind_t *tailwind_init(string source_path) {
       "import * as tw from 'tailwind.js';"
       "globalThis.load_design_system = tw.__unstable__loadDesignSystem;"
       "globalThis.getClassOrder = function(ds, cls) {"
-      "	const res = ds.getClassOrder(cls.split(' '));"
-      "	return res.map(x => x[1] ?? -1);"
+      "	const res = ds.getClassOrder(cls);"
+      "	return res.map(x => x[1]);"
       "};"
       //
   );
@@ -54,30 +54,28 @@ bool tailwind_load_css(tailwind_t *tailwind, string css_path) {
   return success;
 }
 
-static int64_t cap = 0;
+static size_t cap = 0;
 static int64_t *buf = NULL;
-int64_t *tailwind_get_class_order(tailwind_t *tailwind, size_t *len,
-                                  string class) {
+int64_t *tailwind_get_class_order(tailwind_t *tailwind, string *classes,
+                                  size_t len) {
   if (!tailwind->loaded) {
     return NULL;
   }
-
-  JSValue cls_a = jsr_to_js_string(tailwind->jsr, class);
-  JSValue args[2] = {tailwind->design_system, cls_a};
+  JSValue cls_arr = jsr_new_string_array(tailwind->jsr, classes, len);
+  JSValue args[2] = {tailwind->design_system, cls_arr};
   JSValue order = jsr_call(tailwind->jsr, tailwind->get_class_order, 2, args);
 
-  int64_t n = jsr_get_array_length(tailwind->jsr, order);
-
   if (cap == 0) {
-    cap = n;
+    cap = len;
     buf = calloc(cap, sizeof(int64_t));
-  } else if (cap < n) {
-    cap = n;
+  } else if (cap < len) {
+    cap = len;
     buf = realloc(buf, cap * sizeof(int64_t));
   }
-  *len = n;
 
-  return jsr_to_int64_array(tailwind->jsr, order, buf, n);
+  int64_t *order_buf = jsr_to_int64_array(tailwind->jsr, order, buf, len);
+  jsr_free_value(tailwind->jsr, cls_arr);
+  return order_buf;
 }
 
 void tailwind_free(tailwind_t *tailwind) {

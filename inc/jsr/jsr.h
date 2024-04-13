@@ -16,6 +16,8 @@ JSValue jsr_to_js_string(jsr_t *jsr, string str);
 
 void jsr_to_string(jsr_t *jsr, string *result, JSValue value);
 
+JSValue jsr_new_string_array(jsr_t *jsr, string *strings, size_t len);
+
 int64_t jsr_to_int64(jsr_t *jsr, JSValue value);
 
 int64_t jsr_get_array_length(jsr_t *jsr, JSValue value);

@@ -5,6 +5,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void sort_string(string str, string *dest, int64_t *order, size_t len);
+void sort_string(string *strings, int64_t *order, size_t len);
 
 #endif // SORTING_H

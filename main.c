@@ -6,23 +6,8 @@
 #include <sys/time.h>
 #define FS_IMPLEMENTATION
 #include "fs.h"
+#include "timing.h"
 #include <stdio.h>
-
-#define measure_pref(as, block)                                                \
-  double as;                                                                   \
-  {                                                                            \
-    struct timeval start, end;                                                 \
-    gettimeofday(&start, NULL);                                                \
-    block;                                                                     \
-    gettimeofday(&end, NULL);                                                  \
-    as = (end.tv_sec - start.tv_sec) * 1e6;                                    \
-    as += (end.tv_usec - start.tv_usec);                                       \
-  }
-
-#define with(init, cleanup, block)                                             \
-  init;                                                                        \
-  block;                                                                       \
-  cleanup;
 
 // KHASH_MAP_INIT_STR(str, uint32_t);
 
@@ -39,24 +24,28 @@ int main() {
   const string js_path = str("./lib.js");
   const string css_path = str("./min.css");
 
-  with(tailwind_t *tw = tailwind_init(js_path), tailwind_free(tw), {
-    tailwind_load_css(tw, css_path);
-    with(string css = string_with_capacity(1024), string_free(&css), {
-      string_merge_whitespace(test_css, &css);
-      with(string sorted = string_with_capacity(1024), string_free(&sorted), {
-        size_t len;
-        int64_t *result;
+  tailwind_t *tw = tailwind_init(js_path);
+  tailwind_load_css(tw, css_path);
 
-        tailwind_get_class_order(tw, &len, css);
-        measure_pref(total, {
-          result = tailwind_get_class_order(tw, &len, css);
-          sort_string(css, &sorted, result, len);
-        });
+  size_t n;
+  string *classes = string_split_whitespace(test_css, &n);
+  int64_t *order;
 
-        printf("Average time: %fμs\n", total);
-        printf("Sorted: " str_f "\n", str_fe(sorted));
-      });
-    });
+  tailwind_get_class_order(tw, classes, n);
+  measure_pref(total, {
+    order = tailwind_get_class_order(tw, classes, n);
+    sort_string(classes, order, n);
   });
+
+  printf("total: %fμs\n", total);
+
+  printf("Sorted: ");
+  for (size_t i = 0; i < n; i++) {
+    printf(str_f " ", str_fe(classes[i]));
+  }
+  printf("\n");
+
+  string_free(classes);
+  tailwind_free(tw);
   return 0;
 }

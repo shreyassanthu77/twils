@@ -52,9 +52,18 @@ typedef struct {
   } u;
 } JSString;
 
-JSValue jsr_to_js_string(jsr_t *jsr, string str) {
+inline JSValue jsr_to_js_string(jsr_t *jsr, string str) {
   JSValue js_str = JS_NewStringLen(jsr->ctx, str_av(str));
   return js_str;
+}
+
+JSValue jsr_new_string_array(jsr_t *jsr, string *strings, size_t len) {
+  JSValue arr = JS_NewArray(jsr->ctx);
+  for (size_t i = 0; i < len; i++) {
+    JSValue str = jsr_to_js_string(jsr, strings[i]);
+    JS_SetPropertyUint32(jsr->ctx, arr, i, str);
+  }
+  return arr;
 }
 
 void jsr_to_string(jsr_t *jsr, string *result, JSValue value) {
@@ -86,6 +95,9 @@ int64_t *jsr_to_int64_array(jsr_t *jsr, JSValue value, int64_t *buf,
                             size_t len) {
   for (size_t i = 0; i < len; i++) {
     JSValue val = JS_GetPropertyUint32(jsr->ctx, value, i);
+    if (JS_IsNull(val)) {
+      buf[i] = -1;
+    }
     buf[i] = jsr_to_int64(jsr, val);
   }
   JS_FreeValue(jsr->ctx, value);
