@@ -54,26 +54,20 @@ bool tailwind_load_css(tailwind_t *tailwind, string css_path) {
   return success;
 }
 
-static string scratch = {0};
+static int64_t cap = 0;
+static int64_t *buf = NULL;
 int64_t *tailwind_get_class_order(tailwind_t *tailwind, size_t *len,
                                   string class) {
   if (!tailwind->loaded) {
     return NULL;
   }
 
-  if (scratch.capacity == 0) {
-    scratch = string_with_capacity(1024);
-  }
-
-  string_merge_whitespace(&class, &scratch);
-  JSValue cls_a = jsr_to_js_string(tailwind->jsr, scratch);
+  JSValue cls_a = jsr_to_js_string(tailwind->jsr, class);
   JSValue args[2] = {tailwind->design_system, cls_a};
   JSValue order = jsr_call(tailwind->jsr, tailwind->get_class_order, 2, args);
 
   int64_t n = jsr_get_array_length(tailwind->jsr, order);
 
-  static int64_t cap = 0;
-  static int64_t *buf = NULL;
   if (cap == 0) {
     cap = n;
     buf = calloc(cap, sizeof(int64_t));
@@ -90,6 +84,6 @@ void tailwind_free(tailwind_t *tailwind) {
   jsr_free_value(tailwind->jsr, tailwind->design_system);
   jsr_free_value(tailwind->jsr, tailwind->get_class_order);
   jsr_free(tailwind->jsr);
-  string_free(&scratch);
+  free(buf);
   free(tailwind);
 }

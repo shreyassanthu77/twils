@@ -12,7 +12,7 @@
  * @param capacity The capacity of the string.
  * @return The new string.
  */
-string string_with_capacity(size_t capacity) {
+inline string string_with_capacity(size_t capacity) {
   char *data = calloc(capacity + 1, sizeof(char));
   return (string){
       .data = data,
@@ -29,7 +29,7 @@ string string_with_capacity(size_t capacity) {
  * @param length The length of the data.
  * @return The new string.
  */
-string string_new(const char *data, size_t length) {
+inline string string_new(const char *data, size_t length) {
   string str = string_with_capacity(length);
   memcpy(str.data, data, length);
   str.length = length;
@@ -79,7 +79,7 @@ inline string string_clone(string *str) {
  *
  * @param str The string to free.
  */
-void string_free(string *str) {
+inline void string_free(string *str) {
   if (str == NULL || str->data == NULL || !str->owned) {
     return;
   }
@@ -154,8 +154,15 @@ void string_writef(string *str, size_t from, const char *fmt, ...) {
 #undef max
 
 string *string_split_whitespace(string str, size_t *length) {
-  string *strings = calloc(4, sizeof(string));
-  size_t capacity = 4;
+  static string *strings = NULL;
+  static size_t capacity = 10;
+  if (strings == NULL) {
+    strings = calloc(capacity, sizeof(string));
+  }
+  size_t len;
+  if (length == NULL) {
+    length = &len;
+  }
   *length = 0;
   for (size_t i = 0; i < str.length; i++) {
     if (isspace(str.data[i])) {
@@ -163,7 +170,7 @@ string *string_split_whitespace(string str, size_t *length) {
     }
 
     size_t start = i;
-    while (i < str.length && !isspace(str.data[i])) {
+    while (i < str.length - 1 && !isspace(str.data[i])) {
       i++;
     }
 
@@ -178,22 +185,22 @@ string *string_split_whitespace(string str, size_t *length) {
   return strings;
 }
 
-void string_merge_whitespace(string *str, string *dest) {
+void string_merge_whitespace(string str, string *dest) {
   size_t i = 0;
-  while (i < str->length && isspace(str->data[i])) {
+  while (i < str.length && isspace(str.data[i])) {
     i++;
   }
 
   size_t j = 0;
-  while (i < str->length) {
+  while (i < str.length) {
     size_t start = i;
-    while (i < str->length && !isspace(str->data[i])) {
+    while (i < str.length && !isspace(str.data[i])) {
       i++;
     }
-    string_write(dest, j, str->data + start, i - start + 1);
+    string_write(dest, j, str.data + start, i - start + 1);
     j += i - start + 1;
 
-    while (i < str->length && isspace(str->data[i])) {
+    while (i < str.length && isspace(str.data[i])) {
       i++;
     }
   }

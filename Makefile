@@ -15,7 +15,8 @@ CC = zig cc -target ${TARGET}
 SRC = main.c \
 			./inc/str/string.c \
 			./tailwind/tailwind.c \
-			./inc/jsr/jsr.c
+			./sorting/sorting.c \
+			./inc/jsr/jsr.c 
 INCLUDE = -I./inc -I.
 CFLAGS = -static -std=c2x -Wall -Wextra -Werror -Wno-unused-parameter -Wno-format
 ifeq (${MODE}, release)
@@ -129,5 +130,9 @@ build: ${SRC} build-quickjs
 	@${CC} ${CFLAGS} ${INCLUDE} ${SRC} ${OBJ} -o ${BIN}
 
 run: build
+ifeq (${OS}, windows)
+	@/usr/bin/time -f 'took %es, rss %Mkb max and %tkb avg, I/O %I' wine ${BIN}
+else
 	@/usr/bin/time -f 'took %es, rss %Mkb max and %tkb avg, I/O %I' ${BIN}
+endif
 

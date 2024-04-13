@@ -58,13 +58,7 @@ string string_clone(string *str);
  * @param str The string to free.
  */
 void string_free(string *str);
-/**
- * Get the length of a string.
- * Reallocates the string if needed.
- *
- * @param str The string.
- * @return The length of the string.
- */
+
 void string_write(string *str, size_t from, const char *data, size_t length);
 
 /**
@@ -79,6 +73,6 @@ void string_writef(string *str, size_t from, const char *fmt, ...);
 
 string *string_split_whitespace(string str, size_t *length);
 
-void string_merge_whitespace(string *str, string *dest);
+void string_merge_whitespace(string str, string *dest);
 
 #endif // STRING_H
