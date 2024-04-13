@@ -10,6 +10,10 @@ typedef struct tailwind_t {
   JSValue design_system;
   bool loaded;
   JSValue get_class_order;
+  struct {
+    int64_t *buf;
+    size_t cap;
+  } order_buf;
 } tailwind_t;
 
 tailwind_t *tailwind_init(string source_path) {
@@ -32,6 +36,8 @@ tailwind_t *tailwind_init(string source_path) {
   jsr_eval_module_str(tailwind->jsr, str("load_tw_to_global"),
                       load_tw_to_global);
 
+  tailwind->order_buf.cap = 20;
+  tailwind->order_buf.buf = calloc(tailwind->order_buf.cap, sizeof(int64_t));
   return tailwind;
 }
 
@@ -54,8 +60,6 @@ bool tailwind_load_css(tailwind_t *tailwind, string css_path) {
   return success;
 }
 
-static size_t cap = 0;
-static int64_t *buf = NULL;
 int64_t *tailwind_get_class_order(tailwind_t *tailwind, string *classes,
                                   size_t len) {
   if (!tailwind->loaded) {
@@ -65,15 +69,14 @@ int64_t *tailwind_get_class_order(tailwind_t *tailwind, string *classes,
   JSValue args[2] = {tailwind->design_system, cls_arr};
   JSValue order = jsr_call(tailwind->jsr, tailwind->get_class_order, 2, args);
 
-  if (cap == 0) {
-    cap = len;
-    buf = calloc(cap, sizeof(int64_t));
-  } else if (cap < len) {
-    cap = len;
-    buf = realloc(buf, cap * sizeof(int64_t));
+  if (tailwind->order_buf.cap < len) {
+    tailwind->order_buf.cap = len;
+    tailwind->order_buf.buf = realloc(
+        tailwind->order_buf.buf, tailwind->order_buf.cap * sizeof(int64_t));
   }
 
-  int64_t *order_buf = jsr_to_int64_array(tailwind->jsr, order, buf, len);
+  int64_t *order_buf =
+      jsr_to_int64_array(tailwind->jsr, order, tailwind->order_buf.buf, len);
   jsr_free_value(tailwind->jsr, cls_arr);
   return order_buf;
 }
@@ -82,6 +85,6 @@ void tailwind_free(tailwind_t *tailwind) {
   jsr_free_value(tailwind->jsr, tailwind->design_system);
   jsr_free_value(tailwind->jsr, tailwind->get_class_order);
   jsr_free(tailwind->jsr);
-  free(buf);
+  free(tailwind->order_buf.buf);
   free(tailwind);
 }
