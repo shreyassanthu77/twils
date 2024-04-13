@@ -18,6 +18,11 @@ void jsr_to_string(jsr_t *jsr, string *result, JSValue value);
 
 int64_t jsr_to_int64(jsr_t *jsr, JSValue value);
 
+int64_t jsr_get_array_length(jsr_t *jsr, JSValue value);
+
+int64_t *jsr_to_int64_array(jsr_t *jsr, JSValue value, int64_t *buf,
+                            size_t len);
+
 JSValue jsr_get_global(jsr_t *jsr, string name);
 
 JSValue jsr_get(jsr_t *jsr, JSValue obj, string name);

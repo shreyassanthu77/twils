@@ -52,7 +52,7 @@ WINPTHREAD_SRC = inc/winpthread/src/barrier.c \
 build-winpthread: ${WINPTHREAD_SRC}
 	@mkdir -p ${OBJDIR}
 ifeq (${OS}, windows)
-	mkdir -p ${OBJDIR}/winpthread
+	@mkdir -p ${OBJDIR}/winpthread
 	@${WINPTH_CMD} ./inc/winpthread/src/barrier.c -c -o ${OBJDIR}/winpthread/barrier.obj
 	@${WINPTH_CMD} ./inc/winpthread/src/clock.c -c -o ${OBJDIR}/winpthread/clock.obj
 	@${WINPTH_CMD} ./inc/winpthread/src/cond.c -c -o ${OBJDIR}/winpthread/cond.obj

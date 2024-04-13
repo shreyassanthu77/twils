@@ -79,4 +79,6 @@ void string_writef(string *str, size_t from, const char *fmt, ...);
 
 string *string_split_whitespace(string str, size_t *length);
 
+void string_merge_whitespace(string *str, string *dest);
+
 #endif // STRING_H

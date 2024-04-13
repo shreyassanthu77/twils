@@ -75,6 +75,23 @@ int64_t jsr_to_int64(jsr_t *jsr, JSValue value) {
   return res;
 }
 
+inline int64_t jsr_get_array_length(jsr_t *jsr, JSValue value) {
+  JSValue n_val = JS_GetPropertyStr(jsr->ctx, value, "length");
+  int64_t n = jsr_to_int64(jsr, n_val);
+  JS_FreeValue(jsr->ctx, n_val);
+  return n;
+}
+
+int64_t *jsr_to_int64_array(jsr_t *jsr, JSValue value, int64_t *buf,
+                            size_t len) {
+  for (size_t i = 0; i < len; i++) {
+    JSValue val = JS_GetPropertyUint32(jsr->ctx, value, i);
+    buf[i] = jsr_to_int64(jsr, val);
+  }
+  JS_FreeValue(jsr->ctx, value);
+  return buf;
+}
+
 JSValue jsr_get_global(jsr_t *jsr, string name) {
   JSValue global = JS_GetPropertyStr(jsr->ctx, jsr->globalThis, name.data);
   return global;

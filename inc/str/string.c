@@ -177,3 +177,24 @@ string *string_split_whitespace(string str, size_t *length) {
   }
   return strings;
 }
+
+void string_merge_whitespace(string *str, string *dest) {
+  size_t i = 0;
+  while (i < str->length && isspace(str->data[i])) {
+    i++;
+  }
+
+  size_t j = 0;
+  while (i < str->length) {
+    size_t start = i;
+    while (i < str->length && !isspace(str->data[i])) {
+      i++;
+    }
+    string_write(dest, j, str->data + start, i - start + 1);
+    j += i - start + 1;
+
+    while (i < str->length && isspace(str->data[i])) {
+      i++;
+    }
+  }
+}

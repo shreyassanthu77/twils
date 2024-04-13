@@ -25,7 +25,7 @@ tailwind_t *tailwind_init(string source_path) {
       "globalThis.load_design_system = tw.__unstable__loadDesignSystem;"
       "globalThis.getClassOrder = function(ds, cls) {"
       "	const res = ds.getClassOrder(cls.split(' '));"
-      "	return res.map(x => x[1] ?? -1).join(' ');"
+      "	return res.map(x => x[1] ?? -1);"
       "};"
       //
   );
@@ -54,22 +54,42 @@ bool tailwind_load_css(tailwind_t *tailwind, string css_path) {
   return success;
 }
 
-void tailwind_get_class_order(tailwind_t *tailwind, string *result,
-                              string class) {
+static string scratch = {0};
+int64_t *tailwind_get_class_order(tailwind_t *tailwind, size_t *len,
+                                  string class) {
   if (!tailwind->loaded) {
-    return;
+    return NULL;
   }
 
-  JSValue cls_a = jsr_to_js_string(tailwind->jsr, class);
+  if (scratch.capacity == 0) {
+    scratch = string_with_capacity(1024);
+  }
+
+  string_merge_whitespace(&class, &scratch);
+  JSValue cls_a = jsr_to_js_string(tailwind->jsr, scratch);
   JSValue args[2] = {tailwind->design_system, cls_a};
   JSValue order = jsr_call(tailwind->jsr, tailwind->get_class_order, 2, args);
 
-  jsr_to_string(tailwind->jsr, result, order);
+  int64_t n = jsr_get_array_length(tailwind->jsr, order);
+
+  static int64_t cap = 0;
+  static int64_t *buf = NULL;
+  if (cap == 0) {
+    cap = n;
+    buf = calloc(cap, sizeof(int64_t));
+  } else if (cap < n) {
+    cap = n;
+    buf = realloc(buf, cap * sizeof(int64_t));
+  }
+  *len = n;
+
+  return jsr_to_int64_array(tailwind->jsr, order, buf, n);
 }
 
 void tailwind_free(tailwind_t *tailwind) {
   jsr_free_value(tailwind->jsr, tailwind->design_system);
   jsr_free_value(tailwind->jsr, tailwind->get_class_order);
   jsr_free(tailwind->jsr);
+  string_free(&scratch);
   free(tailwind);
 }
