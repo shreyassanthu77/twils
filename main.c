@@ -31,13 +31,32 @@ int main() {
   string *classes = string_split_whitespace(test_css, &n);
   int64_t *order;
 
-  tailwind_get_class_order(tw, classes, n);
-  measure_pref(total, {
-    order = tailwind_get_class_order(tw, classes, n);
-    sort_string(classes, order, n);
-  });
+  // for (size_t i = 0; i < n i += 2) {
+  //   measure_pref(total, {
+  //     order = tailwind_get_class_order(tw, classes + i, 2);
+  //     sort_string(classes, order, n);
+  //   });
+  //
+  //   printf("total: %fns\n", total);
+  // }
+  //
+  // for (size_t i = 0; i < n; i += 4) {
+  //   measure_pref(total, {
+  //     order = tailwind_get_class_order(tw, classes + i, 4);
+  //     sort_string(classes, order, n);
+  //   });
+  //
+  //   printf("total: %fns\n", total);
+  // }
 
-  printf("total: %fμs\n", total);
+  for (size_t i = 0; i < n; i += 5) {
+    measure_pref(total, {
+      order = tailwind_get_class_order(tw, classes + i, 5);
+      sort_string(classes, order, n);
+    });
+
+    printf("total: %fns\n", total);
+  }
 
   printf("Sorted: ");
   for (size_t i = 0; i < n; i++) {

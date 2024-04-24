@@ -5,3 +5,4 @@ CompileFlags:
     - -I../inc/
     - -I../../inc/
     - -std=c2x
+    - -D_POSIX_C_SOURCE=199309

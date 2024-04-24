@@ -65,6 +65,7 @@ int64_t *tailwind_get_class_order(tailwind_t *tailwind, string *classes,
   if (!tailwind->loaded) {
     return NULL;
   }
+
   JSValue cls_arr = jsr_new_string_array(tailwind->jsr, classes, len);
   JSValue args[2] = {tailwind->design_system, cls_arr};
   JSValue order = jsr_call(tailwind->jsr, tailwind->get_class_order, 2, args);
