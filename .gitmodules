@@ -1,3 +1,0 @@
-[submodule "inc/quickjs"]
-	path = inc/quickjs
-	url = https://github.com/bellard/quickjs
